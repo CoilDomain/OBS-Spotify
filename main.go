@@ -65,11 +65,12 @@ func onReady() {
 	}()
 
 	for {
-		cmd := exec.Command("powershell.exe", "(get-process -processname Spotify | select -unique -property MainWindowTitle).MainWindowTitle")
+		cmd := exec.Command("powershell.exe", "((get-process -processname Spotify | select -unique -property MainWindowTitle) | Where-Object -Property mainwindowtitle -notlike $null).mainwindowtitle")
 		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 		out, _ := cmd.Output()
 		currentsong := string(out)
-		convertsongtitletoutf8, _ := FromShiftJIS(currentsong)
+		currentsongtrimmed := strings.TrimSpace(currentsong)
+		convertsongtitletoutf8, _ := FromShiftJIS(currentsongtrimmed)
 		fmt.Println(convertsongtitletoutf8)
 
 		if convertsongtitletoutf8 != "" {
