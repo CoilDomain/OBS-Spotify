@@ -65,24 +65,28 @@ func onReady() {
 	}()
 
 	for {
-		cmd := exec.Command("powershell.exe", "((get-process -processname Spotify | select -unique -property MainWindowTitle) | Where-Object -Property mainwindowtitle -notlike $null).mainwindowtitle")
+		cmd := exec.Command("powershell.exe", "((get-process -processname Spotify | select -unique -property MainWindowTitle) | Where-Object -Property mainwindowtitle -notlike $null | where-object -property mainwindowtitle -notlike *Spotify*).mainwindowtitle")
 		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 		out, _ := cmd.Output()
 		currentsong := string(out)
 		currentsongtrimmed := strings.TrimSpace(currentsong)
 		convertsongtitletoutf8, _ := FromShiftJIS(currentsongtrimmed)
 		fmt.Println(convertsongtitletoutf8)
+		logfile, err := os.Create(logfilepath)
+		defer logfile.Close()
 
 		if convertsongtitletoutf8 != "" {
 			systray.SetIcon(Green)
-			logfile, err := os.Create(logfilepath)
-			defer logfile.Close()
 			w := bufio.NewWriter(logfile)
 			_, err = fmt.Fprintf(w, "%s", convertsongtitletoutf8)
 			check(err)
 			w.Flush()
 		} else {
 			systray.SetIcon(Red)
+			w := bufio.NewWriter(logfile)
+			_, err = fmt.Fprintf(w, "%s", "")
+			check(err)
+			w.Flush()
 		}
 		time.Sleep(time.Second)
 	}
